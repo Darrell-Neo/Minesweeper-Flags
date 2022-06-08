@@ -8,12 +8,36 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="header">
-      <h2>Minesweeper Flags</h2>
-      <div id="timer">0:00:00</div>
-      <button id="refresh">Restart</button>
+    <div class="big-container">
+      <div class="header">
+        <h2>Minesweeper Flags</h2>
+        <div class="timer-refresh">
+          <div id="timer">0:00:00</div>
+          <button id="refresh">Restart game</button>
+        </div>
+      </div>
+      <div class="game-area">
+        <div class="left-bar">
+          <div class="red-player player-photo">
+            Red Player
+            <div class="spacing"></div>
+            <img src="Pictures/charmander2.png" alt="Charmander" />
+            <div class="spacing"></div>
+            <div>Score:</div>
+            <div class="p1-score"></div>
+          </div>
+          <div class="blue-player player-photo">
+            Blue Player
+            <div class="spacing"></div>
+            <img src="Pictures/squirtle.png" alt="Squirtle" />
+            <div class="spacing"></div>
+            <div>Score:</div>
+            <div class="p2-score"></div>
+          </div>
+        </div>
+        <div class="container"></div>
+      </div>
     </div>
-    <div class="container"></div>
     <script src="script_MSF.js" charset="UTF-8"></script>
   </body>
 </html>
