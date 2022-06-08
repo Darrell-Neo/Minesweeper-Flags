@@ -1,0 +1,29 @@
+.header {
+  width: 90%;
+  margin: auto;
+  padding: 10px;
+  flex-direction: column;
+}
+
+.container {
+  width: 90%;
+  margin: auto;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+}
+
+.square {
+  height: 35px;
+  width: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: lawngreen;
+  text-shadow: 1px 1px 1px black;
+  border: 1px solid gray;
+}
