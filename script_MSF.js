@@ -2,9 +2,16 @@
 
 ///////////////////////////////////////////////////////////////////
 // Starting variables
-const columnList = "ABCDEFGHIJKLMNOP";
+const columnList = "ABCDEFGHIJKLMNOP"; // For a standard 16 by 16 board for Minesweeper Flags
+const minesNumber = 51; // Standard number of mines for Minesweeper Flags
 const board = [];
 let mines = [];
+const answerNums = [];
+let answer = [];
+let gameState = [];
+let openedCellsList = [];
+let toOpenIsland = [];
+
 // const mines = [
 //   "A10",
 //   "A11",
@@ -58,11 +65,6 @@ let mines = [];
 //   "P4",
 //   "P8",
 // ];
-const answerNums = [];
-let answer = [];
-let gameState = [];
-let openedCellsList = [];
-let toOpenIsland = [];
 
 ///////////////////////////////////////////////////////////////////
 // Create board of 16 x 16 squares, columns A - P, Rows 0-15
@@ -85,7 +87,7 @@ function generateMines() {
   // Reset mines array
   mines = [];
   // Run this until total number of mines is 51
-  while (mines.length < 51) {
+  while (mines.length < minesNumber) {
     // Generates a random mine in board array
     let singleMine =
       board[Math.floor(Math.random() * 16)][Math.floor(Math.random() * 16)];
@@ -255,6 +257,7 @@ function openIsland(inputCell) {
   }
   openCell(inputCell);
   console.table(gameState);
+  console.log(openedCellsList);
   if (
     openedCellsList.length > 1 &&
     answer[columnIndex(inputCell)][rowOf(inputCell)] === "M"
@@ -289,6 +292,8 @@ function makeMove(inputCell) {
     // console.log(toOpenIsland);
     // console.log(toOpenIsland.length);
   }
+
+  winCheck();
 }
 
 // makeMove("A5");
@@ -317,7 +322,7 @@ function endGame() {
 }
 
 ///////////////////////////////////////////////////////////////////
-// Set up html
+// Set up html buttons
 function generateInputButtons() {
   for (let i = 0; i < 16; i++) {
     let row = document.createElement("div");
@@ -335,20 +340,8 @@ function generateInputButtons() {
 
 generateInputButtons();
 
-function getMoveHTML2(e) {
-  e.preventDefault();
-  makeMove(e.target.id);
-}
-
-function refreshPage() {
-  document.location.reload();
-}
-
-document.querySelector(".container").addEventListener("click", getMoveHTML2);
-document.querySelector("#refresh").addEventListener("click", refreshPage);
-
 ///////////////////////////////////////////////////////////////////
-// Timer
+// Timer and refresh button
 let timerVar = setInterval(countTimer, 1000);
 let totalSeconds = 0;
 function countTimer() {
@@ -361,3 +354,53 @@ function countTimer() {
   document.getElementById("timer").innerText =
     hour + ":" + minute + ":" + seconds;
 }
+
+function refreshPage() {
+  document.location.reload();
+}
+
+document.querySelector("#refresh").addEventListener("click", refreshPage);
+
+///////////////////////////////////////////////////////////////////
+// Click and right click
+function getMoveHTML2(e) {
+  e.preventDefault();
+  if (e.target.innerText !== "Flag") {
+    makeMove(e.target.id);
+  }
+}
+
+function rightClick(e) {
+  e.preventDefault();
+  if (!openedCellsList.includes(e.target.id)) {
+    if (e.target.innerText == "Flag") {
+      e.target.innerText = "";
+    } else {
+      e.target.innerText = "Flag";
+    }
+    console.log(openedCellsList);
+  }
+  return false;
+}
+
+document.querySelector(".container").addEventListener("click", getMoveHTML2);
+document
+  .querySelector(".container")
+  .addEventListener("contextmenu", rightClick, false);
+
+///////////////////////////////////////////////////////////////////
+// Win screen
+function winCheck() {
+  if (openedCellsList.length >= 256 - mines.length) {
+    window.alert("You won!");
+  }
+}
+
+// let winState = false;
+
+// // while (winState === false) {
+// if (openedCellsList.length >= 245) {
+//   window.alert("You won!");
+//   //     winState = true;
+// }
+// // }
