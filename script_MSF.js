@@ -228,8 +228,15 @@ function openCell(inputCell) {
   }
   gameState[columnIndex(inputCell)][rowOf(inputCell)] =
     answer[columnIndex(inputCell)][rowOf(inputCell)];
-  document.querySelector("#" + inputCell).innerText =
-    gameState[columnIndex(inputCell)][rowOf(inputCell)];
+  // document.querySelector("#" + inputCell).innerText =
+  //   gameState[columnIndex(inputCell)][rowOf(inputCell)];
+  document.querySelector("#" + inputCell).removeAttribute("class");
+  document.querySelector("#" + inputCell).classList = "square";
+  document
+    .querySelector("#" + inputCell)
+    .classList.add(
+      "cell" + gameState[columnIndex(inputCell)][rowOf(inputCell)]
+    );
   if (!openedCellsList.includes(inputCell)) {
     openedCellsList.push(inputCell);
   }
@@ -329,7 +336,7 @@ function generateInputButtons() {
     row.setAttribute("class", "row");
     for (let j = 0; j < 16; j++) {
       let button = document.createElement("div");
-      button.setAttribute("class", "square");
+      button.className = "square cellBoard";
       button.setAttribute("id", board[i][j]);
       // button.innerText = board[i][j];
       row.append(button);
@@ -373,10 +380,12 @@ function getMoveHTML2(e) {
 function rightClick(e) {
   e.preventDefault();
   if (!openedCellsList.includes(e.target.id)) {
-    if (e.target.innerText == "Flag") {
-      e.target.innerText = "";
+    if (e.target.classList == "square cellBlueFlag") {
+      e.target.classList.remove("cellBlueFlag");
+      e.target.classList.add("cellBoard");
     } else {
-      e.target.innerText = "Flag";
+      e.target.classList.remove("cellBoard");
+      e.target.classList.add("cellBlueFlag");
     }
     console.log(openedCellsList);
   }

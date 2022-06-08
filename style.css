@@ -60,7 +60,7 @@
   height: 10px;
 }
 
-img {
+.player-img {
   width: 115px;
 }
 
@@ -87,4 +87,45 @@ img {
   color: lawngreen;
   text-shadow: 1px 1px 1px black;
   border: 1px solid gray;
+  background-color: lightskyblue;
+}
+
+div.cellBoard::before {
+  content: url(/Pictures/CellBoard.jpeg);
+}
+div.cell0::before {
+  content: url(/Pictures/Cell0.jpeg);
+}
+div.cell1::before {
+  content: url(/Pictures/Cell1.jpeg);
+}
+div.cell2::before {
+  content: url(/Pictures/Cell2.jpeg);
+}
+div.cell3::before {
+  content: url(/Pictures/Cell3.jpeg);
+}
+div.cell4::before {
+  content: url(/Pictures/Cell4.jpeg);
+}
+div.cell5::before {
+  content: url(/Pictures/Cell4.jpeg);
+}
+div.cell6::before {
+  content: url(/Pictures/Cell4.jpeg);
+}
+div.cell7::before {
+  content: url(/Pictures/Cell4.jpeg);
+}
+div.cell8::before {
+  content: url(/Pictures/Cell4.jpeg);
+}
+div.cellM::before {
+  content: url(/Pictures/CellMine.jpeg);
+}
+div.cellRedFlag::before {
+  content: url(/Pictures/CellRedFlag.jpeg);
+}
+div.cellBlueFlag::before {
+  content: url(/Pictures/CellBlueFlag.jpeg);
 }
