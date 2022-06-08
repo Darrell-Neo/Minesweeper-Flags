@@ -324,7 +324,9 @@ function makeMove(inputCell) {
 // End game - reveal all mines
 function endGame() {
   for (const item of mines) {
-    openCell(item);
+    if (document.querySelector("#" + item).classList != "square cellBlueFlag") {
+      openCell(item);
+    }
   }
 }
 
@@ -372,7 +374,7 @@ document.querySelector("#refresh").addEventListener("click", refreshPage);
 // Click and right click
 function getMoveHTML2(e) {
   e.preventDefault();
-  if (e.target.innerText !== "Flag") {
+  if (e.target.classList != "square cellBlueFlag") {
     makeMove(e.target.id);
   }
 }
