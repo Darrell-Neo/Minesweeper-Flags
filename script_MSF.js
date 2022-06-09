@@ -2,93 +2,29 @@
 
 ///////////////////////////////////////////////////////////////////
 // Starting variables
-const columnList = "ABCDEFGHIJKLMNOP"; // For a standard 16 by 16 board for Minesweeper Flags
+const columnList = "ABCDEFGHIJKLMNOP"; // Standard 16 by 16 board for Minesweeper Flags
 const minesNumber = 51; // Standard number of mines for Minesweeper Flags
 const board = [];
-let mines = [
-  "A0",
-  "A1",
-  "A2",
-  "B0",
-  "B2",
-  "C0",
-  "C1",
-  "C2",
-  "D0",
-  "D2",
-  "E0",
-  "E2",
-  "F0",
-  "F2",
-  "G2",
-];
-const answerNums = [];
+let mines = [];
+let answerNums = [];
 let answer = [];
 let gameState = [];
 let openedCellsList = [];
-let blueFlagList = [];
 let toOpenIsland = [];
+let blueFlagList = [];
 
-// const mines = [
-//   "A10",
-//   "A11",
-//   "A13",
-//   "A9",
-//   "B1",
-//   "B12",
-//   "B9",
-//   "C13",
-//   "C14",
-//   "C15",
-//   "C7",
-//   "D1",
-//   "D10",
-//   "D12",
-//   "D4",
-//   "E11",
-//   "E14",
-//   "E15",
-//   "E4",
-//   "E5",
-//   "E9",
-//   "F5",
-//   "G1",
-//   "G15",
-//   "G2",
-//   "G5",
-//   "H10",
-//   "H2",
-//   "I8",
-//   "J15",
-//   "J3",
-//   "J6",
-//   "K0",
-//   "K3",
-//   "K5",
-//   "L10",
-//   "M15",
-//   "M4",
-//   "M5",
-//   "M9",
-//   "N15",
-//   "N2",
-//   "N5",
-//   "N9",
-//   "O1",
-//   "O14",
-//   "O9",
-//   "P0",
-//   "P3",
-//   "P4",
-//   "P8",
-// ];
+// Sample mines array to test for 5-8 surrounding mines
+// ["A0","A1","A2","B0","B2","C0","C1","C2","D0","D2","E0","E2","F0","F2","G2",]
+
+// Sample mines array for testing
+// ["A10","A11","A13","A9","B1","B12","B9","C13","C14","C15","C7","D1","D10","D12","D4","E11","E14","E15","E4","E5","E9","F5","G1","G15","G2","G5","H10","H2","I8","J15","J3","J6","K0","K3","K5","L10","M15","M4","M5","M9","N15","N2","N5","N9","O1","O14","O9","P0","P3","P4","P8",];
 
 ///////////////////////////////////////////////////////////////////
 // Create board of 16 x 16 squares, columns A - P, Rows 0-15
 function generateBoard() {
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < columnList.length; i++) {
     let row = [];
-    for (let j = 0; j < 16; j++) {
+    for (let j = 0; j < columnList.length; j++) {
       row.push(columnList[i] + j);
     }
     board.push(row);
@@ -96,13 +32,13 @@ function generateBoard() {
 }
 
 generateBoard();
-console.table(board);
+// console.table(board);
 
 ///////////////////////////////////////////////////////////////////
 // Generate 51 mines
 function generateMines() {
   // Reset mines array
-  // mines = [];
+  mines = [];
   // Run this until total number of mines is 51
   while (mines.length < minesNumber) {
     // Generates a random mine in board array
@@ -113,11 +49,12 @@ function generateMines() {
       mines.push(singleMine);
     }
   }
+  // Sort for easier ease of reference
   mines.sort();
 }
 
 generateMines();
-console.log(mines);
+// console.log(mines);
 
 ///////////////////////////////////////////////////////////////////
 // Return array of surrounding cells
@@ -172,9 +109,6 @@ function surroundingCells(inputCell) {
   return outputArr;
 }
 
-// let testCell = "C1";
-// console.log(surroundingCells(testCell));
-
 ///////////////////////////////////////////////////////////////////
 // Count if surrounding cells contain mines
 function surroundingMines(inputCell) {
@@ -187,14 +121,12 @@ function surroundingMines(inputCell) {
   return count;
 }
 
-// console.log(surroundingMines(testCell));
-
 ///////////////////////////////////////////////////////////////////
 // Generate answer board (numbers only)
 function genAnsNums() {
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < columnList.length; i++) {
     let row = [];
-    for (let j = 0; j < 16; j++) {
+    for (let j = 0; j < columnList.length; j++) {
       row.push(surroundingMines(board[i][j]));
     }
     answerNums.push(row);
@@ -202,14 +134,14 @@ function genAnsNums() {
 }
 
 genAnsNums();
-console.table(answerNums);
+// console.table(answerNums);
 
 ///////////////////////////////////////////////////////////////////
 // Generate answer board (with mines reflected)
 function genAns() {
   answer = answerNums;
-  for (let i = 0; i < 16; i++) {
-    for (let j = 0; j < 16; j++) {
+  for (let i = 0; i < columnList.length; i++) {
+    for (let j = 0; j < columnList.length; j++) {
       if (mines.includes(board[i][j])) {
         answer[i][j] = "M";
       }
@@ -218,6 +150,7 @@ function genAns() {
 }
 
 genAns();
+// Show answer in console
 console.table(answer);
 
 ///////////////////////////////////////////////////////////////////
@@ -227,7 +160,7 @@ function resetBoard() {
 }
 
 resetBoard();
-console.table(gameState);
+// console.table(gameState);
 
 ///////////////////////////////////////////////////////////////////
 // Open a cell
@@ -235,7 +168,8 @@ function columnIndex(inputCell) {
   return columnList.indexOf(inputCell.substring(0, 1));
 }
 
-function openCell(inputCell) {
+// If no cells are opened and first move is a mine, to restart game
+function checkIfFirstMoveMine(inputCell) {
   if (
     openedCellsList.length === 0 &&
     answer[columnIndex(inputCell)][rowOf(inputCell)] === "M"
@@ -243,10 +177,14 @@ function openCell(inputCell) {
     window.alert("Oh no, you opened a mine at the start, restarting...");
     document.location.reload(false);
   }
+}
+
+function openCell(inputCell) {
+  checkIfFirstMoveMine(inputCell);
+  // This updates the gameState array (only for console)
   gameState[columnIndex(inputCell)][rowOf(inputCell)] =
     answer[columnIndex(inputCell)][rowOf(inputCell)];
-  // document.querySelector("#" + inputCell).innerText =
-  //   gameState[columnIndex(inputCell)][rowOf(inputCell)];
+  // This updates the classes of the square so that it show up on the actual board
   document.querySelector("#" + inputCell).removeAttribute("class");
   document.querySelector("#" + inputCell).classList = "square";
   document
@@ -254,35 +192,36 @@ function openCell(inputCell) {
     .classList.add(
       "cell" + gameState[columnIndex(inputCell)][rowOf(inputCell)]
     );
+  // This updates the list of opened cells
   if (!openedCellsList.includes(inputCell)) {
     openedCellsList.push(inputCell);
   }
 }
 
-// openCell("D1");
-// console.table(gameState);
-
 ///////////////////////////////////////////////////////////////////
 // If opened cell is a 0, to expand the island around it
 function openIsland(inputCell) {
+  // If opened cell is a 0
   if (answer[columnIndex(inputCell)][rowOf(inputCell)] === 0) {
+    // To loop through the surrounding 8 cells and open them
     for (const item of surroundingCells(inputCell)) {
+      // To add in any surrounding cells containing "0" to the pending list to open
       if (
         answer[columnIndex(item)][rowOf(item)] === 0 &&
         !openedCellsList.includes(item)
       ) {
         toOpenIsland.push(columnOf(item) + rowOf(item));
       }
-      // for (const item2 of surroundingCells(item)) {
-      //   openCell(item2);
-      // }
       openCell(item);
     }
   }
+  // To open selected cell and check for game over if it is a mine
   openCell(inputCell);
-  console.table(gameState);
-  console.log(openedCellsList);
-  // checkEndGame();
+  checkEndGame(inputCell);
+}
+
+// If opened cell is a mine, to trigger end game alert and show end game board
+function checkEndGame(inputCell) {
   if (
     openedCellsList.length > 1 &&
     answer[columnIndex(inputCell)][rowOf(inputCell)] === "M"
@@ -296,65 +235,30 @@ function openIsland(inputCell) {
     endGame();
   }
 }
-
-function checkEndGame() {
-  if (
-    openedCellsList.length > 1 &&
-    answer[columnIndex(inputCell)][rowOf(inputCell)] === "M"
-  ) {
-    window.alert(
-      `Game over! \nYou took ${
-        document.getElementById("timer").innerText
-      } and lost`
-    );
-    clearInterval(timerVar);
-    endGame();
-  }
-}
-
-// openIsland("G7");
-// console.table(gameState);
-// console.log(openedCellsList);
-// console.log(toOpenIsland);
-// console.log(toOpenIsland.length);
-// console.table(gameState);
 
 ///////////////////////////////////////////////////////////////////
-// Make move
+// Make a move
 function makeMove(inputCell) {
   openIsland(inputCell);
 
   while (toOpenIsland.length > 0) {
     openIsland(toOpenIsland[0]);
-    // console.table(gameState);
-    // console.log(openedCellsList);
     toOpenIsland.shift();
-    // console.log(toOpenIsland);
-    // console.log(toOpenIsland.length);
   }
 
   winCheck();
 }
 
-// makeMove("A5");
-// console.table(gameState);
+///////////////////////////////////////////////////////////////////
+// Win screen
+function winCheck() {
+  if (openedCellsList.length >= 256 - mines.length) {
+    window.alert("You won!");
+  }
+}
 
 ///////////////////////////////////////////////////////////////////
-// Get move input
-
-// const playerMove = document.querySelector("#move").value;
-// console.log(playerMove);
-
-// function getMoveHTML(e) {
-//   e.preventDefault();
-//   let item = document.querySelector("#move").value;
-//   makeMove(item);
-// }
-
-// document.querySelector("#submit-btn").addEventListener("click", getMoveHTML);
-
-///////////////////////////////////////////////////////////////////
-// End game - reveal all mines
+// End game - reveal all remaining unflagged mines and change wrongly flagged mines to red
 function endGame() {
   for (const item of mines) {
     if (document.querySelector("#" + item).classList != "square cellBlueFlag") {
@@ -370,16 +274,15 @@ function endGame() {
 }
 
 ///////////////////////////////////////////////////////////////////
-// Set up html buttons
+// Set up actual game board on html
 function generateInputButtons() {
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < columnList.length; i++) {
     let row = document.createElement("div");
     row.setAttribute("class", "row");
-    for (let j = 0; j < 16; j++) {
+    for (let j = 0; j < columnList.length; j++) {
       let button = document.createElement("div");
       button.className = "square cellBoard";
       button.setAttribute("id", board[i][j]);
-      // button.innerText = board[i][j];
       row.append(button);
     }
     document.querySelector(".container").append(row);
@@ -410,7 +313,9 @@ function refreshPage() {
 document.querySelector("#refresh").addEventListener("click", refreshPage);
 
 ///////////////////////////////////////////////////////////////////
-// Click and right click
+// Left click and right click
+
+// Left click only works if the cell is not flagged
 function getMoveHTML2(e) {
   e.preventDefault();
   if (e.target.classList != "square cellBlueFlag") {
@@ -418,6 +323,7 @@ function getMoveHTML2(e) {
   }
 }
 
+// Right click toggles between flag and no flag
 function rightClick(e) {
   e.preventDefault();
   if (!openedCellsList.includes(e.target.id)) {
@@ -439,20 +345,3 @@ document.querySelector(".container").addEventListener("click", getMoveHTML2);
 document
   .querySelector(".container")
   .addEventListener("contextmenu", rightClick, false);
-
-///////////////////////////////////////////////////////////////////
-// Win screen
-function winCheck() {
-  if (openedCellsList.length >= 256 - mines.length) {
-    window.alert("You won!");
-  }
-}
-
-// let winState = false;
-
-// // while (winState === false) {
-// if (openedCellsList.length >= 245) {
-//   window.alert("You won!");
-//   //     winState = true;
-// }
-// // }
