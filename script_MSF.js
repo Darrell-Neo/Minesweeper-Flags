@@ -11,7 +11,11 @@ let answer = [];
 let gameState = [];
 let openedCellsList = [];
 let toOpenIsland = [];
+let redFlagList = [];
 let blueFlagList = [];
+let redScore = 0;
+let blueScore = 0;
+let turnPlayer = "Red";
 
 // Sample mines array to test for 5-8 surrounding mines
 // ["A0","A1","A2","B0","B2","C0","C1","C2","D0","D2","E0","E2","F0","F2","G2",]
@@ -180,22 +184,32 @@ function checkIfFirstMoveMine(inputCell) {
 }
 
 function openCell(inputCell) {
-  checkIfFirstMoveMine(inputCell);
-  // This updates the gameState array (only for console)
-  gameState[columnIndex(inputCell)][rowOf(inputCell)] =
-    answer[columnIndex(inputCell)][rowOf(inputCell)];
-  // This updates the classes of the square so that it show up on the actual board
-  document.querySelector("#" + inputCell).removeAttribute("class");
-  document.querySelector("#" + inputCell).classList = "square";
-  document
-    .querySelector("#" + inputCell)
-    .classList.add(
-      "cell" + gameState[columnIndex(inputCell)][rowOf(inputCell)]
-    );
+  checkMine(inputCell);
+  // checkIfFirstMoveMine(inputCell);
+  // Only perform the following if it is not a mine
+  if (answer[columnIndex(inputCell)][rowOf(inputCell)] != "M") {
+    // This updates the gameState array (only for console)
+    gameState[columnIndex(inputCell)][rowOf(inputCell)] =
+      answer[columnIndex(inputCell)][rowOf(inputCell)];
+    // This updates the classes of the square so that it show up on the actual board
+    document.querySelector("#" + inputCell).removeAttribute("class");
+    document.querySelector("#" + inputCell).classList = "square";
+    document
+      .querySelector("#" + inputCell)
+      .classList.add(
+        "cell" + gameState[columnIndex(inputCell)][rowOf(inputCell)]
+      );
+    if (turnPlayer === "Red") {
+      turnPlayer = "Blue";
+    } else {
+      turnPlayer = "Red";
+    }
+  }
   // This updates the list of opened cells
   if (!openedCellsList.includes(inputCell)) {
     openedCellsList.push(inputCell);
   }
+  updateScore();
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -217,58 +231,73 @@ function openIsland(inputCell) {
   }
   // To open selected cell and check for game over if it is a mine
   openCell(inputCell);
-  checkEndGame(inputCell);
 }
 
-// If opened cell is a mine, to trigger end game alert and show end game board
-function checkEndGame(inputCell) {
-  if (
-    openedCellsList.length > 1 &&
-    answer[columnIndex(inputCell)][rowOf(inputCell)] === "M"
-  ) {
-    window.alert(
-      `Game over! \nYou took ${
-        document.getElementById("timer").innerText
-      } and lost`
-    );
-    clearInterval(timerVar);
-    endGame();
+// If opened cell is a mine, flag it
+function checkMine(inputCell) {
+  if (answer[columnIndex(inputCell)][rowOf(inputCell)] === "M") {
+    document.querySelector("#" + inputCell).classList.remove("cellBoard");
+    if (turnPlayer === "Red") {
+      document.querySelector("#" + inputCell).classList.add("cellRedFlag");
+      redFlagList.push(inputCell);
+      redScore++;
+    } else {
+      document.querySelector("#" + inputCell).classList.add("cellBlueFlag");
+      blueFlagList.push(inputCell);
+      blueScore++;
+    }
   }
 }
 
 ///////////////////////////////////////////////////////////////////
 // Make a move
 function makeMove(inputCell) {
-  openIsland(inputCell);
+  if (!openedCellsList.includes(inputCell)) {
+    openIsland(inputCell);
 
-  while (toOpenIsland.length > 0) {
-    openIsland(toOpenIsland[0]);
-    toOpenIsland.shift();
+    while (toOpenIsland.length > 0) {
+      openIsland(toOpenIsland[0]);
+      toOpenIsland.shift();
+    }
   }
+}
 
-  winCheck();
+function updateScore() {
+  document.querySelector(".p1-score").innerText = `Score: ${redScore}`;
+  document.querySelector(".p2-score").innerText = `Score: ${blueScore}`;
+  if (turnPlayer === "Red") {
+    document.querySelector(".red-player").style.opacity = "100%";
+    document.querySelector(".blue-player").style.opacity = "50%";
+  } else {
+    document.querySelector(".red-player").style.opacity = "50%";
+    document.querySelector(".blue-player").style.opacity = "100%";
+  }
+  // document.querySelector("h3").innerText = `Turn player:${turnPlayer}`;
 }
 
 ///////////////////////////////////////////////////////////////////
 // Win screen
 function winCheck() {
-  if (openedCellsList.length >= 256 - mines.length) {
-    window.alert("You won!");
+  if (redScore >= 26) {
+    window.alert("Red won!");
+    endGame();
+  } else if (blueScore >= 26) {
+    window.alert("Blue won!");
+    endGame();
   }
 }
 
 ///////////////////////////////////////////////////////////////////
 // End game - reveal all remaining unflagged mines and change wrongly flagged mines to red
 function endGame() {
+  clearInterval(timerVar);
   for (const item of mines) {
-    if (document.querySelector("#" + item).classList != "square cellBlueFlag") {
-      openCell(item);
-    }
-  }
-  for (const item of blueFlagList) {
-    if (!mines.includes(item)) {
-      document.querySelector("#" + item).classList.remove("cellBlueFlag");
-      document.querySelector("#" + item).classList.add("cellRedFlag");
+    if (!openedCellsList.includes(item)) {
+      document.querySelector("#" + item).removeAttribute("class");
+      document.querySelector("#" + item).classList = "square";
+      document
+        .querySelector("#" + item)
+        .classList.add("cell" + answer[columnIndex(item)][rowOf(item)]);
     }
   }
 }
@@ -320,6 +349,7 @@ function getMoveHTML2(e) {
   e.preventDefault();
   if (e.target.classList != "square cellBlueFlag") {
     makeMove(e.target.id);
+    winCheck();
   }
 }
 
@@ -342,6 +372,4 @@ function rightClick(e) {
 }
 
 document.querySelector(".container").addEventListener("click", getMoveHTML2);
-document
-  .querySelector(".container")
-  .addEventListener("contextmenu", rightClick, false);
+// document.querySelector(".container").addEventListener("contextmenu", rightClick, false);
