@@ -97,6 +97,10 @@
   background-color: lightskyblue;
 }
 
+.square:hover {
+  background-color: black;
+}
+
 div.cellBoard::before {
   content: url(/Pictures/CellBoard.jpeg);
 }
@@ -116,16 +120,16 @@ div.cell4::before {
   content: url(/Pictures/Cell4.jpeg);
 }
 div.cell5::before {
-  content: url(/Pictures/Cell4.jpeg);
+  content: url(/Pictures/Cell5.jpeg);
 }
 div.cell6::before {
-  content: url(/Pictures/Cell4.jpeg);
+  content: url(/Pictures/Cell6.jpeg);
 }
 div.cell7::before {
-  content: url(/Pictures/Cell4.jpeg);
+  content: url(/Pictures/Cell7.jpeg);
 }
 div.cell8::before {
-  content: url(/Pictures/Cell4.jpeg);
+  content: url(/Pictures/Cell8.jpeg);
 }
 div.cellM::before {
   content: url(/Pictures/CellMine.jpeg);

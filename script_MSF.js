@@ -5,11 +5,28 @@
 const columnList = "ABCDEFGHIJKLMNOP"; // For a standard 16 by 16 board for Minesweeper Flags
 const minesNumber = 51; // Standard number of mines for Minesweeper Flags
 const board = [];
-let mines = [];
+let mines = [
+  "A0",
+  "A1",
+  "A2",
+  "B0",
+  "B2",
+  "C0",
+  "C1",
+  "C2",
+  "D0",
+  "D2",
+  "E0",
+  "E2",
+  "F0",
+  "F2",
+  "G2",
+];
 const answerNums = [];
 let answer = [];
 let gameState = [];
 let openedCellsList = [];
+let blueFlagList = [];
 let toOpenIsland = [];
 
 // const mines = [
@@ -85,7 +102,7 @@ console.table(board);
 // Generate 51 mines
 function generateMines() {
   // Reset mines array
-  mines = [];
+  // mines = [];
   // Run this until total number of mines is 51
   while (mines.length < minesNumber) {
     // Generates a random mine in board array
@@ -265,6 +282,22 @@ function openIsland(inputCell) {
   openCell(inputCell);
   console.table(gameState);
   console.log(openedCellsList);
+  // checkEndGame();
+  if (
+    openedCellsList.length > 1 &&
+    answer[columnIndex(inputCell)][rowOf(inputCell)] === "M"
+  ) {
+    window.alert(
+      `Game over! \nYou took ${
+        document.getElementById("timer").innerText
+      } and lost`
+    );
+    clearInterval(timerVar);
+    endGame();
+  }
+}
+
+function checkEndGame() {
   if (
     openedCellsList.length > 1 &&
     answer[columnIndex(inputCell)][rowOf(inputCell)] === "M"
@@ -328,6 +361,12 @@ function endGame() {
       openCell(item);
     }
   }
+  for (const item of blueFlagList) {
+    if (!mines.includes(item)) {
+      document.querySelector("#" + item).classList.remove("cellBlueFlag");
+      document.querySelector("#" + item).classList.add("cellRedFlag");
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -385,9 +424,11 @@ function rightClick(e) {
     if (e.target.classList == "square cellBlueFlag") {
       e.target.classList.remove("cellBlueFlag");
       e.target.classList.add("cellBoard");
+      blueFlagList.shift(e.target.id);
     } else {
       e.target.classList.remove("cellBoard");
       e.target.classList.add("cellBlueFlag");
+      blueFlagList.push(e.target.id);
     }
     console.log(openedCellsList);
   }
