@@ -98,7 +98,8 @@
 }
 
 .square:hover {
-  background-color: black;
+  background-color: darkblue;
+  cursor: pointer;
 }
 
 div.cellBoard::before {
