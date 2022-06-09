@@ -16,6 +16,8 @@ let blueFlagList = [];
 let redScore = 0;
 let blueScore = 0;
 let turnPlayer = "Red";
+let redBombToggle = false;
+let blueBombToggle = false;
 
 // Sample mines array to test for 5-8 surrounding mines
 // ["A0","A1","A2","B0","B2","C0","C1","C2","D0","D2","E0","E2","F0","F2","G2",]
@@ -199,17 +201,21 @@ function openCell(inputCell) {
       .classList.add(
         "cell" + gameState[columnIndex(inputCell)][rowOf(inputCell)]
       );
-    if (turnPlayer === "Red") {
-      turnPlayer = "Blue";
-    } else {
-      turnPlayer = "Red";
-    }
+    changeTurn();
   }
   // This updates the list of opened cells
   if (!openedCellsList.includes(inputCell)) {
     openedCellsList.push(inputCell);
   }
   updateScore();
+}
+
+function changeTurn() {
+  if (turnPlayer === "Red") {
+    turnPlayer = "Blue";
+  } else if (turnPlayer === "Blue") {
+    turnPlayer = "Red";
+  }
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -268,11 +274,80 @@ function updateScore() {
   if (turnPlayer === "Red") {
     document.querySelector(".red-player").style.opacity = "100%";
     document.querySelector(".blue-player").style.opacity = "50%";
-  } else {
+  } else if (turnPlayer === "Blue") {
     document.querySelector(".red-player").style.opacity = "50%";
     document.querySelector(".blue-player").style.opacity = "100%";
   }
   // document.querySelector("h3").innerText = `Turn player:${turnPlayer}`;
+}
+
+///////////////////////////////////////////////////////////////////
+// Red and blue bombs
+function bombArea(inputCell) {
+  let bomb_area2 = [];
+  let bomb_area = surroundingCells(inputCell);
+  for (const item of bomb_area) {
+    bomb_area2 = [...bomb_area2, ...surroundingCells(item)];
+  }
+  const bomb_area2_set = new Set(bomb_area2);
+  bomb_area2 = Array.from(bomb_area2_set);
+  return bomb_area2;
+}
+
+function redBomb(centerCell) {
+  for (const inputCell of bombArea(centerCell)) {
+    if (!openedCellsList.includes(inputCell)) {
+      if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "M") {
+        document.querySelector("#" + inputCell).classList.remove("cellBoard");
+        document.querySelector("#" + inputCell).classList.add("cellRedFlag");
+        redFlagList.push(inputCell);
+        redScore++;
+      } else if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "0") {
+        makeMove(inputCell);
+      } else {
+        // This updates the gameState array (only for console)
+        gameState[columnIndex(inputCell)][rowOf(inputCell)] =
+          answer[columnIndex(inputCell)][rowOf(inputCell)];
+        // This updates the classes of the square so that it show up on the actual board
+        document.querySelector("#" + inputCell).removeAttribute("class");
+        document.querySelector("#" + inputCell).classList = "square";
+        document
+          .querySelector("#" + inputCell)
+          .classList.add(
+            "cell" + gameState[columnIndex(inputCell)][rowOf(inputCell)]
+          );
+      }
+      openedCellsList.push(inputCell);
+    }
+  }
+}
+
+function blueBomb(centerCell) {
+  for (const inputCell of bombArea(centerCell)) {
+    if (!openedCellsList.includes(inputCell)) {
+      if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "M") {
+        document.querySelector("#" + inputCell).classList.remove("cellBoard");
+        document.querySelector("#" + inputCell).classList.add("cellBlueFlag");
+        blueFlagList.push(inputCell);
+        blueScore++;
+      } else if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "0") {
+        makeMove(inputCell);
+      } else {
+        // This updates the gameState array (only for console)
+        gameState[columnIndex(inputCell)][rowOf(inputCell)] =
+          answer[columnIndex(inputCell)][rowOf(inputCell)];
+        // This updates the classes of the square so that it show up on the actual board
+        document.querySelector("#" + inputCell).removeAttribute("class");
+        document.querySelector("#" + inputCell).classList = "square";
+        document
+          .querySelector("#" + inputCell)
+          .classList.add(
+            "cell" + gameState[columnIndex(inputCell)][rowOf(inputCell)]
+          );
+      }
+      openedCellsList.push(inputCell);
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -345,12 +420,24 @@ document.querySelector("#refresh").addEventListener("click", refreshPage);
 // Left click and right click
 
 // Left click only works if the cell is not flagged
-function getMoveHTML2(e) {
+function getMoveHTML(e) {
   e.preventDefault();
-  if (e.target.classList != "square cellBlueFlag") {
+  if (turnPlayer === "Red" && redBombToggle === true) {
+    redBomb(e.target.id);
+    turnPlayer = "Blue";
+    updateScore();
+    document.querySelector("#red-bomb").src = "Pictures/charmander.png";
+    redBombToggle = false;
+  } else if (turnPlayer === "Blue" && blueBombToggle === true) {
+    blueBomb(e.target.id);
+    turnPlayer = "Red";
+    updateScore();
+    document.querySelector("#blue-bomb").src = "Pictures/squirtle.png";
+    blueBombToggle = false;
+  } else {
     makeMove(e.target.id);
-    winCheck();
   }
+  winCheck();
 }
 
 // Right click toggles between flag and no flag
@@ -371,5 +458,28 @@ function rightClick(e) {
   return false;
 }
 
-document.querySelector(".container").addEventListener("click", getMoveHTML2);
+function toggleBombHTML(e) {
+  e.preventDefault();
+  if (e.target.id === "red-bomb") {
+    if (redBombToggle === false) {
+      e.target.src = "Pictures/charmanderBomb.png";
+      redBombToggle = true;
+    } else {
+      e.target.src = "Pictures/charmander.png";
+      redBombToggle = false;
+    }
+  }
+  if (e.target.id === "blue-bomb") {
+    if (blueBombToggle === false) {
+      e.target.src = "Pictures/squirtleBomb.png";
+      blueBombToggle = true;
+    } else {
+      e.target.src = "Pictures/squirtle.png";
+      blueBombToggle = false;
+    }
+  }
+}
+
+document.querySelector(".container").addEventListener("click", getMoveHTML);
 // document.querySelector(".container").addEventListener("contextmenu", rightClick, false);
+document.querySelector(".left-bar").addEventListener("click", toggleBombHTML);
