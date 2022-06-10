@@ -18,6 +18,8 @@ let blueScore = 0;
 let turnPlayer = "Red";
 let redBombToggle = false;
 let blueBombToggle = false;
+let aiToggle = false;
+let aiPossibleMoves = [];
 
 // Sample mines array to test for 5-8 surrounding mines
 // ["A0","A1","A2","B0","B2","C0","C1","C2","D0","D2","E0","E2","F0","F2","G2",]
@@ -32,6 +34,7 @@ function generateBoard() {
     let row = [];
     for (let j = 0; j < columnList.length; j++) {
       row.push(columnList[i] + j);
+      aiPossibleMoves.push(columnList[i] + j);
     }
     board.push(row);
   }
@@ -279,6 +282,34 @@ function updateScore() {
     document.querySelector(".blue-player").style.opacity = "100%";
   }
   // document.querySelector("h3").innerText = `Turn player:${turnPlayer}`;
+  checkAI();
+}
+
+///////////////////////////////////////////////////////////////////
+// AI - random possible move
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function checkAI() {
+  await sleep(2000);
+  if (aiToggle === true && turnPlayer === "Blue") {
+    aiMove();
+  }
+}
+
+function aiMove() {
+  let aiPossibleMovesUpdated = [];
+  for (const item of aiPossibleMoves) {
+    if (!openedCellsList.includes(item)) {
+      aiPossibleMovesUpdated.push(item);
+    }
+  }
+  makeMove(
+    aiPossibleMovesUpdated[
+      Math.floor(Math.random() * aiPossibleMovesUpdated.length)
+    ]
+  );
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -424,16 +455,16 @@ function getMoveHTML(e) {
   e.preventDefault();
   if (turnPlayer === "Red" && redBombToggle === true) {
     redBomb(e.target.id);
-    turnPlayer = "Blue";
-    updateScore();
     document.querySelector("#red-bomb").src = "Pictures/charmander.png";
     redBombToggle = false;
+    turnPlayer = "Blue";
+    updateScore();
   } else if (turnPlayer === "Blue" && blueBombToggle === true) {
     blueBomb(e.target.id);
-    turnPlayer = "Red";
-    updateScore();
     document.querySelector("#blue-bomb").src = "Pictures/squirtle.png";
     blueBombToggle = false;
+    turnPlayer = "Red";
+    updateScore();
   } else {
     makeMove(e.target.id);
   }
@@ -480,6 +511,18 @@ function toggleBombHTML(e) {
   }
 }
 
+function toggleAI(e) {
+  e.preventDefault();
+  if (aiToggle === false) {
+    e.target.innerText = "Minesweeper Flags (vs CPU)";
+    aiToggle = true;
+  } else {
+    e.target.innerText = "Minesweeper Flags (vs Player)";
+    aiToggle = false;
+  }
+}
+
 document.querySelector(".container").addEventListener("click", getMoveHTML);
 // document.querySelector(".container").addEventListener("contextmenu", rightClick, false);
 document.querySelector(".left-bar").addEventListener("click", toggleBombHTML);
+document.querySelector("h2").addEventListener("click", toggleAI);
