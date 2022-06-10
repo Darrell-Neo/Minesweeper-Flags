@@ -8,7 +8,6 @@ const board = [];
 let mines = [];
 let answerNums = [];
 let answer = [];
-let gameState = [];
 let openedCellsList = [];
 let toOpenIsland = [];
 let redFlagList = [];
@@ -28,7 +27,7 @@ let aiPossibleMoves = [];
 // ["A10","A11","A13","A9","B1","B12","B9","C13","C14","C15","C7","D1","D10","D12","D4","E11","E14","E15","E4","E5","E9","F5","G1","G15","G2","G5","H10","H2","I8","J15","J3","J6","K0","K3","K5","L10","M15","M4","M5","M9","N15","N2","N5","N9","O1","O14","O9","P0","P3","P4","P8",];
 
 ///////////////////////////////////////////////////////////////////
-// Create board of 16 x 16 squares, columns A - P, Rows 0-15
+// Create board of 16 x 16 squares, columns A - P, Rows 0-15, and separate array of all possible AI moves
 function generateBoard() {
   for (let i = 0; i < columnList.length; i++) {
     let row = [];
@@ -58,7 +57,7 @@ function generateMines() {
       mines.push(singleMine);
     }
   }
-  // Sort for easier ease of reference
+  // Sort for ease of reference
   mines.sort();
 }
 
@@ -70,15 +69,12 @@ generateMines();
 function columnBefore(inputCell) {
   return columnList[columnList.indexOf(inputCell.substring(0, 1)) - 1];
 }
-
 function columnOf(inputCell) {
   return inputCell.substring(0, 1);
 }
-
 function columnAfter(inputCell) {
   return columnList[columnList.indexOf(inputCell.substring(0, 1)) + 1];
 }
-
 function rowBefore(inputCell) {
   if (parseInt(inputCell.substring(1)) > 0) {
     return parseInt(inputCell.substring(1)) - 1;
@@ -86,11 +82,9 @@ function rowBefore(inputCell) {
     return NaN;
   }
 }
-
 function rowOf(inputCell) {
   return parseInt(inputCell.substring(1));
 }
-
 function rowAfter(inputCell) {
   if (parseInt(inputCell.substring(1)) < 15) {
     return parseInt(inputCell.substring(1)) + 1;
@@ -159,90 +153,28 @@ function genAns() {
 }
 
 genAns();
-// Show answer in console
-console.table(answer);
-
-///////////////////////////////////////////////////////////////////
-// Reset game state
-function resetBoard() {
-  gameState = board;
-}
-
-resetBoard();
-// console.table(gameState);
+console.table(answer); // Show answer in console
 
 ///////////////////////////////////////////////////////////////////
 // Open a cell
+function openCell(inputCell) {
+  // <For single-player MS only> checkIfFirstMoveMine(inputCell);
+  checkMine(inputCell);
+  // Only perform the following if it is not a mine
+  if (answer[columnIndex(inputCell)][rowOf(inputCell)] != "M") {
+    updateBoardArray(inputCell);
+    updateBoardHTML(inputCell);
+    changeTurn();
+  }
+  updateOpenedCellList(inputCell);
+  updateScore();
+}
+
 function columnIndex(inputCell) {
   return columnList.indexOf(inputCell.substring(0, 1));
 }
 
-// If no cells are opened and first move is a mine, to restart game
-function checkIfFirstMoveMine(inputCell) {
-  if (
-    openedCellsList.length === 0 &&
-    answer[columnIndex(inputCell)][rowOf(inputCell)] === "M"
-  ) {
-    window.alert("Oh no, you opened a mine at the start, restarting...");
-    document.location.reload(false);
-  }
-}
-
-function openCell(inputCell) {
-  checkMine(inputCell);
-  // checkIfFirstMoveMine(inputCell);
-  // Only perform the following if it is not a mine
-  if (answer[columnIndex(inputCell)][rowOf(inputCell)] != "M") {
-    // This updates the gameState array (only for console)
-    gameState[columnIndex(inputCell)][rowOf(inputCell)] =
-      answer[columnIndex(inputCell)][rowOf(inputCell)];
-    // This updates the classes of the square so that it show up on the actual board
-    document.querySelector("#" + inputCell).removeAttribute("class");
-    document.querySelector("#" + inputCell).classList = "square";
-    document
-      .querySelector("#" + inputCell)
-      .classList.add(
-        "cell" + gameState[columnIndex(inputCell)][rowOf(inputCell)]
-      );
-    changeTurn();
-  }
-  // This updates the list of opened cells
-  if (!openedCellsList.includes(inputCell)) {
-    openedCellsList.push(inputCell);
-  }
-  updateScore();
-}
-
-function changeTurn() {
-  if (turnPlayer === "Red") {
-    turnPlayer = "Blue";
-  } else if (turnPlayer === "Blue") {
-    turnPlayer = "Red";
-  }
-}
-
-///////////////////////////////////////////////////////////////////
-// If opened cell is a 0, to expand the island around it
-function openIsland(inputCell) {
-  // If opened cell is a 0
-  if (answer[columnIndex(inputCell)][rowOf(inputCell)] === 0) {
-    // To loop through the surrounding 8 cells and open them
-    for (const item of surroundingCells(inputCell)) {
-      // To add in any surrounding cells containing "0" to the pending list to open
-      if (
-        answer[columnIndex(item)][rowOf(item)] === 0 &&
-        !openedCellsList.includes(item)
-      ) {
-        toOpenIsland.push(columnOf(item) + rowOf(item));
-      }
-      openCell(item);
-    }
-  }
-  // To open selected cell and check for game over if it is a mine
-  openCell(inputCell);
-}
-
-// If opened cell is a mine, flag it
+// If opened cell is a mine, flag it and update player scores
 function checkMine(inputCell) {
   if (answer[columnIndex(inputCell)][rowOf(inputCell)] === "M") {
     document.querySelector("#" + inputCell).classList.remove("cellBoard");
@@ -258,19 +190,37 @@ function checkMine(inputCell) {
   }
 }
 
-///////////////////////////////////////////////////////////////////
-// Make a move
-function makeMove(inputCell) {
-  if (!openedCellsList.includes(inputCell)) {
-    openIsland(inputCell);
+// This updates the board array (only for console)
+function updateBoardArray(inputCell) {
+  board[columnIndex(inputCell)][rowOf(inputCell)] =
+    answer[columnIndex(inputCell)][rowOf(inputCell)];
+}
 
-    while (toOpenIsland.length > 0) {
-      openIsland(toOpenIsland[0]);
-      toOpenIsland.shift();
-    }
+// This updates the classes of the square so that it show up on the actual HTML board
+function updateBoardHTML(inputCell) {
+  document.querySelector("#" + inputCell).removeAttribute("class");
+  document.querySelector("#" + inputCell).classList = "square";
+  document
+    .querySelector("#" + inputCell)
+    .classList.add("cell" + board[columnIndex(inputCell)][rowOf(inputCell)]);
+}
+
+function changeTurn() {
+  if (turnPlayer === "Red") {
+    turnPlayer = "Blue";
+  } else if (turnPlayer === "Blue") {
+    turnPlayer = "Red";
   }
 }
 
+// This updates the list of opened cells
+function updateOpenedCellList(inputCell) {
+  if (!openedCellsList.includes(inputCell)) {
+    openedCellsList.push(inputCell);
+  }
+}
+
+// To update score of each player after every move, and then check if AI needs to move
 function updateScore() {
   document.querySelector(".p1-score").innerText = `Score: ${redScore}`;
   document.querySelector(".p2-score").innerText = `Score: ${blueScore}`;
@@ -281,107 +231,10 @@ function updateScore() {
     document.querySelector(".red-player").style.opacity = "50%";
     document.querySelector(".blue-player").style.opacity = "100%";
   }
-  // document.querySelector("h3").innerText = `Turn player:${turnPlayer}`;
+  winCheck();
   checkAI();
 }
 
-///////////////////////////////////////////////////////////////////
-// AI - random possible move
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function checkAI() {
-  await sleep(2000);
-  if (aiToggle === true && turnPlayer === "Blue") {
-    aiMove();
-  }
-}
-
-function aiMove() {
-  let aiPossibleMovesUpdated = [];
-  for (const item of aiPossibleMoves) {
-    if (!openedCellsList.includes(item)) {
-      aiPossibleMovesUpdated.push(item);
-    }
-  }
-  makeMove(
-    aiPossibleMovesUpdated[
-      Math.floor(Math.random() * aiPossibleMovesUpdated.length)
-    ]
-  );
-}
-
-///////////////////////////////////////////////////////////////////
-// Red and blue bombs
-function bombArea(inputCell) {
-  let bomb_area2 = [];
-  let bomb_area = surroundingCells(inputCell);
-  for (const item of bomb_area) {
-    bomb_area2 = [...bomb_area2, ...surroundingCells(item)];
-  }
-  const bomb_area2_set = new Set(bomb_area2);
-  bomb_area2 = Array.from(bomb_area2_set);
-  return bomb_area2;
-}
-
-function redBomb(centerCell) {
-  for (const inputCell of bombArea(centerCell)) {
-    if (!openedCellsList.includes(inputCell)) {
-      if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "M") {
-        document.querySelector("#" + inputCell).classList.remove("cellBoard");
-        document.querySelector("#" + inputCell).classList.add("cellRedFlag");
-        redFlagList.push(inputCell);
-        redScore++;
-      } else if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "0") {
-        makeMove(inputCell);
-      } else {
-        // This updates the gameState array (only for console)
-        gameState[columnIndex(inputCell)][rowOf(inputCell)] =
-          answer[columnIndex(inputCell)][rowOf(inputCell)];
-        // This updates the classes of the square so that it show up on the actual board
-        document.querySelector("#" + inputCell).removeAttribute("class");
-        document.querySelector("#" + inputCell).classList = "square";
-        document
-          .querySelector("#" + inputCell)
-          .classList.add(
-            "cell" + gameState[columnIndex(inputCell)][rowOf(inputCell)]
-          );
-      }
-      openedCellsList.push(inputCell);
-    }
-  }
-}
-
-function blueBomb(centerCell) {
-  for (const inputCell of bombArea(centerCell)) {
-    if (!openedCellsList.includes(inputCell)) {
-      if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "M") {
-        document.querySelector("#" + inputCell).classList.remove("cellBoard");
-        document.querySelector("#" + inputCell).classList.add("cellBlueFlag");
-        blueFlagList.push(inputCell);
-        blueScore++;
-      } else if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "0") {
-        makeMove(inputCell);
-      } else {
-        // This updates the gameState array (only for console)
-        gameState[columnIndex(inputCell)][rowOf(inputCell)] =
-          answer[columnIndex(inputCell)][rowOf(inputCell)];
-        // This updates the classes of the square so that it show up on the actual board
-        document.querySelector("#" + inputCell).removeAttribute("class");
-        document.querySelector("#" + inputCell).classList = "square";
-        document
-          .querySelector("#" + inputCell)
-          .classList.add(
-            "cell" + gameState[columnIndex(inputCell)][rowOf(inputCell)]
-          );
-      }
-      openedCellsList.push(inputCell);
-    }
-  }
-}
-
-///////////////////////////////////////////////////////////////////
 // Win screen
 function winCheck() {
   if (redScore >= 26) {
@@ -409,8 +262,128 @@ function endGame() {
 }
 
 ///////////////////////////////////////////////////////////////////
+// If selected cell is a 0, to expand the island around it
+function openIsland(inputCell) {
+  // If opened cell is a 0
+  if (answer[columnIndex(inputCell)][rowOf(inputCell)] === 0) {
+    // To loop through the surrounding 8 cells and open them
+    for (const item of surroundingCells(inputCell)) {
+      // To add in any surrounding cells containing "0" to the pending list of 0s to open
+      if (
+        answer[columnIndex(item)][rowOf(item)] === 0 &&
+        !openedCellsList.includes(item)
+      ) {
+        toOpenIsland.push(columnOf(item) + rowOf(item));
+      }
+      openCell(item);
+    }
+  }
+  // To finally open the selected cell
+  openCell(inputCell);
+}
+
+///////////////////////////////////////////////////////////////////
+// Make a move and then clear the pending list of 0s to open
+function makeMove(inputCell) {
+  if (!openedCellsList.includes(inputCell)) {
+    openIsland(inputCell);
+
+    while (toOpenIsland.length > 0) {
+      openIsland(toOpenIsland[0]);
+      toOpenIsland.shift();
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////
+// Simple AI - random possible move
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function checkAI() {
+  await sleep(2000);
+  if (aiToggle === true && turnPlayer === "Blue") {
+    aiMove();
+  }
+}
+
+function aiMove() {
+  let aiPossibleMovesUpdated = [];
+  // Updates the possible moves to account for any newly opened cells
+  for (const item of aiPossibleMoves) {
+    if (!openedCellsList.includes(item)) {
+      aiPossibleMovesUpdated.push(item);
+    }
+  }
+  // AI to make a move on a random possible move
+  makeMove(
+    aiPossibleMovesUpdated[
+      Math.floor(Math.random() * aiPossibleMovesUpdated.length)
+    ]
+  );
+}
+
+///////////////////////////////////////////////////////////////////
+// Red and blue bombs
+
+// This generates a 5x5 area around the input cell by performing the surrounding cells function twice
+function bombArea(inputCell) {
+  let bomb_area2 = [];
+  let bomb_area1 = surroundingCells(inputCell);
+  for (const item of bomb_area1) {
+    bomb_area2 = [...bomb_area2, ...surroundingCells(item)];
+  }
+  const bomb_area2_set = new Set(bomb_area2);
+  bomb_area2 = Array.from(bomb_area2_set);
+  return bomb_area2;
+}
+
+function redBomb(centerCell) {
+  for (const inputCell of bombArea(centerCell)) {
+    if (!openedCellsList.includes(inputCell)) {
+      if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "M") {
+        document.querySelector("#" + inputCell).classList.remove("cellBoard");
+        document.querySelector("#" + inputCell).classList.add("cellRedFlag");
+        redFlagList.push(inputCell);
+        redScore++;
+      } else if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "0") {
+        makeMove(inputCell);
+      } else {
+        updateBoardArray(inputCell);
+        updateBoardHTML(inputCell);
+      }
+      openedCellsList.push(inputCell);
+    }
+  }
+}
+
+function blueBomb(centerCell) {
+  for (const inputCell of bombArea(centerCell)) {
+    if (!openedCellsList.includes(inputCell)) {
+      if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "M") {
+        document.querySelector("#" + inputCell).classList.remove("cellBoard");
+        document.querySelector("#" + inputCell).classList.add("cellBlueFlag");
+        blueFlagList.push(inputCell);
+        blueScore++;
+      } else if (answer[columnIndex(inputCell)][rowOf(inputCell)] == "0") {
+        makeMove(inputCell);
+      } else {
+        updateBoardArray(inputCell);
+        updateBoardHTML(inputCell);
+      }
+      openedCellsList.push(inputCell);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////
+// End of game logic
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
 // Set up actual game board on html
-function generateInputButtons() {
+function generateHTMLBoard() {
   for (let i = 0; i < columnList.length; i++) {
     let row = document.createElement("div");
     row.setAttribute("class", "row");
@@ -424,12 +397,13 @@ function generateInputButtons() {
   }
 }
 
-generateInputButtons();
+generateHTMLBoard();
 
 ///////////////////////////////////////////////////////////////////
 // Timer and refresh button
 let timerVar = setInterval(countTimer, 1000);
 let totalSeconds = 0;
+
 function countTimer() {
   ++totalSeconds;
   let hour = Math.floor(totalSeconds / 3600);
@@ -445,12 +419,9 @@ function refreshPage() {
   document.location.reload();
 }
 
-document.querySelector("#refresh").addEventListener("click", refreshPage);
-
 ///////////////////////////////////////////////////////////////////
-// Left click and right click
+// Left click
 
-// Left click only works if the cell is not flagged
 function getMoveHTML(e) {
   e.preventDefault();
   if (turnPlayer === "Red" && redBombToggle === true) {
@@ -468,25 +439,19 @@ function getMoveHTML(e) {
   } else {
     makeMove(e.target.id);
   }
-  winCheck();
 }
 
-// Right click toggles between flag and no flag
-function rightClick(e) {
+///////////////////////////////////////////////////////////////////
+// Toggles for AI or bombs
+function toggleAI(e) {
   e.preventDefault();
-  if (!openedCellsList.includes(e.target.id)) {
-    if (e.target.classList == "square cellBlueFlag") {
-      e.target.classList.remove("cellBlueFlag");
-      e.target.classList.add("cellBoard");
-      blueFlagList.shift(e.target.id);
-    } else {
-      e.target.classList.remove("cellBoard");
-      e.target.classList.add("cellBlueFlag");
-      blueFlagList.push(e.target.id);
-    }
-    console.log(openedCellsList);
+  if (aiToggle === false) {
+    e.target.innerText = "Minesweeper Flags (vs CPU)";
+    aiToggle = true;
+  } else {
+    e.target.innerText = "Minesweeper Flags (vs Player)";
+    aiToggle = false;
   }
-  return false;
 }
 
 function toggleBombHTML(e) {
@@ -511,18 +476,47 @@ function toggleBombHTML(e) {
   }
 }
 
-function toggleAI(e) {
-  e.preventDefault();
-  if (aiToggle === false) {
-    e.target.innerText = "Minesweeper Flags (vs CPU)";
-    aiToggle = true;
-  } else {
-    e.target.innerText = "Minesweeper Flags (vs Player)";
-    aiToggle = false;
-  }
-}
-
-document.querySelector(".container").addEventListener("click", getMoveHTML);
-// document.querySelector(".container").addEventListener("contextmenu", rightClick, false);
+///////////////////////////////////////////////////////////////////
+// Event listeners
+document.querySelector("#refresh").addEventListener("click", refreshPage);
+document.querySelector("#toggle-ai").addEventListener("click", toggleAI);
 document.querySelector(".left-bar").addEventListener("click", toggleBombHTML);
-document.querySelector("h2").addEventListener("click", toggleAI);
+document.querySelector(".container").addEventListener("click", getMoveHTML);
+
+///////////////////////////////////////////////////////////////////
+// Extra code for single-player minesweeper only
+///////////////////////////////////////////////////////////////////
+
+// // <For single-player MS only>
+// document.querySelector(".container").addEventListener("contextmenu", rightClick, false);
+
+// // <For single-player MS only>
+// // If no cells are opened and first move is a mine, to restart game
+// function checkIfFirstMoveMine(inputCell) {
+//   if (
+//     openedCellsList.length === 0 &&
+//     answer[columnIndex(inputCell)][rowOf(inputCell)] === "M"
+//   ) {
+//     window.alert("Oh no, you opened a mine at the start, restarting...");
+//     document.location.reload(false);
+//   }
+// }
+
+// // <For single-player MS only>
+// // Right click toggles between flag and no flag
+// function rightClick(e) {
+//   e.preventDefault();
+//   if (!openedCellsList.includes(e.target.id)) {
+//     if (e.target.classList == "square cellBlueFlag") {
+//       e.target.classList.remove("cellBlueFlag");
+//       e.target.classList.add("cellBoard");
+//       blueFlagList.shift(e.target.id);
+//     } else {
+//       e.target.classList.remove("cellBoard");
+//       e.target.classList.add("cellBlueFlag");
+//       blueFlagList.push(e.target.id);
+//     }
+//     console.log(openedCellsList);
+//   }
+//   return false;
+// }

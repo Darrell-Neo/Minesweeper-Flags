@@ -12,6 +12,10 @@
   display: flex;
 }
 
+#toggle-ai {
+  cursor: pointer;
+}
+
 .timer-refresh {
   margin-left: 230px;
   margin-bottom: 0;
@@ -19,6 +23,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+button {
+  cursor: pointer;
 }
 
 .game-area {
@@ -64,6 +72,7 @@
 
 .player-img {
   width: 115px;
+  cursor: pointer;
 }
 
 .container {
